@@ -351,8 +351,21 @@ public class MidtermLevel : MonoBehaviour
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
 
+        GameObject safeRoot = new GameObject(
+        "HUD SafeArea",
+        typeof(RectTransform),
+        typeof(SafeAreaFitter)
+        );
+        safeRoot.transform.SetParent(root.transform, false);
+        RectTransform safeRect = safeRoot.GetComponent<RectTransform>();
+        safeRect.anchorMin = Vector2.zero;
+        safeRect.anchorMax = Vector2.one;
+        safeRect.offsetMin = Vector2.zero;
+        safeRect.offsetMax = Vector2.zero;
+
+
         GameObject panel = new GameObject("Stats Panel", typeof(RectTransform), typeof(Image));
-        panel.transform.SetParent(root.transform, false);
+        panel.transform.SetParent(safeRoot.transform, false);
         RectTransform rect = panel.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0f, 1f);
         rect.anchorMax = new Vector2(0f, 1f);
@@ -371,7 +384,7 @@ public class MidtermLevel : MonoBehaviour
         textRect.offsetMin = new Vector2(12f, 8f);
         textRect.offsetMax = new Vector2(-6f, -7f);
         canvasStats = textObject.GetComponent<TextMeshProUGUI>();
-        canvasStats.fontSize = 25f;
+        canvasStats.fontSize = 36f;
         canvasStats.fontStyle = FontStyles.Bold;
         canvasStats.color = Color.white;
         canvasStats.raycastTarget = false;
@@ -435,7 +448,7 @@ public class MidtermLevel : MonoBehaviour
             titleStyle.fontSize = 24;
             titleStyle.normal.textColor = Color.white;
             smallStyle = new GUIStyle(titleStyle);
-            smallStyle.fontSize = 17;
+            smallStyle.fontSize = 24;
             centeredStyle = new GUIStyle(titleStyle);
             centeredStyle.alignment = TextAnchor.MiddleCenter;
         }
@@ -448,21 +461,23 @@ public class MidtermLevel : MonoBehaviour
         }
         if (stage == 3 && boss != null)
         {
-            GUI.Box(new Rect(Screen.width * 0.29f, 91 * scale, Screen.width * 0.42f, 63 * scale), "");
-            GUI.Label(new Rect(Screen.width * 0.30f, 96 * scale, Screen.width * 0.40f, 26 * scale), "GUARDIAN  " + boss.CurrentHP + "/" + boss.maxHP, centeredStyle);
+            float bossPanelY = Screen.height * 0.80f;
+            centeredStyle.fontSize = Mathf.Clamp(
+            Mathf.RoundToInt(Screen.width * 0.055f), 16, 28);
+            GUI.Box(new Rect(Screen.width * 0.29f, bossPanelY, Screen.width * 0.42f, 75 * scale), "");
+            GUI.Label(new Rect(Screen.width * 0.29f, bossPanelY + 2f * scale, Screen.width * 0.42f, 38f * scale), "BOSS HP " + boss.CurrentHP + "/" + boss.maxHP, centeredStyle);
             float width = Screen.width * 0.35f;
             GUI.color = new Color(0.35f, 0.2f, 0.3f);
-            GUI.DrawTexture(new Rect(Screen.width * 0.325f, 126 * scale, width, 10 * scale), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(Screen.width * 0.325f, bossPanelY + 50f * scale, width, 10 * scale), Texture2D.whiteTexture);
             GUI.color = magenta;
-            GUI.DrawTexture(new Rect(Screen.width * 0.325f, 126 * scale, width * (boss.CurrentHP / (float)boss.maxHP), 10 * scale), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(Screen.width * 0.325f, bossPanelY + 50f * scale, width * (boss.CurrentHP / (float)boss.maxHP), 10 * scale), Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
-        if (GUI.Button(new Rect(Screen.width - 112 * scale, 12 * scale, 98 * scale, 32 * scale), "RESTART"))
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        
         if (Time.time < messageUntil)
         {
             float width = Mathf.Min(Screen.width - 20f, 520f * scale);
-            GUI.Box(new Rect((Screen.width - width) * 0.5f, Screen.height * 0.16f, width, 50 * scale), message);
+            GUI.Box(new Rect((Screen.width - width) * 0.5f, Screen.height * 0.72f, width, 50 * scale), message);
         }
     }
 }
