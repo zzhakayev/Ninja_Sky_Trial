@@ -1,0 +1,120 @@
+# AI USAGE LOG — NINJA SKY TRIAL
+
+**Project:** Ninja Sky Trial  
+**Course:** Game Development Fundamentals  
+**Engine:** Unity 6.3 LTS (6000.3.24f1)  
+**AI Tool:** OpenAI ChatGPT
+
+## 1. Purpose of AI Assistance
+
+ChatGPT was used as a development assistant during the creation and improvement of Ninja Sky Trial, a 3D Unity platformer.
+
+AI assistance included C# code generation and modification, programming explanations, debugging, UI implementation, responsive design, and documentation.
+
+Some project code and updates were generated with AI assistance and integrated into the Unity project.
+
+## 2. Gameplay Development
+
+ChatGPT assisted with the development and improvement of several gameplay features:
+
+- Character movement and jumping
+- Shooting and projectile mechanics
+- Player health and damage
+- Coin collection
+- Platforms and obstacles
+- Enemy interactions
+- Guardian boss battle
+- Level progression and scene transitions
+
+AI also helped explain the purpose and functionality of Unity components and C# scripts.
+
+## 3. User Interface Development
+
+ChatGPT assisted with the implementation and improvement of:
+
+- Main Menu
+- Gameplay HUD with HP and COINS
+- Virtual joystick
+- JUMP and FIRE buttons
+- Pause Menu with RESUME, RESTART, and MAIN MENU
+- Reusable PauseCanvas Prefab across three levels
+
+The Pause Menu uses `Time.timeScale` to pause and resume gameplay.
+
+## 4. Responsive UI and Safe Area
+
+AI assistance included:
+
+- Canvas Scaler settings
+- RectTransform anchors
+- Safe Area implementation
+- `SafeAreaFitter.cs`
+- Mobile HUD adjustments
+- iPhone screen cutout support
+- Tablet layout testing
+
+The interface was improved based on testing results in Unity Device Simulator.
+
+## 5. Debugging Assistance
+
+ChatGPT helped identify and resolve several technical issues:
+
+- Pause button disappearing during gameplay
+- Incorrect PauseCanvas hierarchy
+- Duplicate RESTART button
+- Small HUD text
+- Guardian health bar text clipping
+- UI elements overlapping
+- C# compiler error CS0103
+- Interface positioning problems on different devices
+
+The student reviewed the suggested changes and checked the results in Unity.
+
+## 6. Student Participation and Testing
+
+The student actively participated in development by:
+
+- Working directly in Unity Editor
+- Editing C# scripts in Visual Studio Code
+- Creating and configuring UI objects
+- Testing gameplay and level progression
+- Checking character movement and shooting
+- Fixing issues identified during testing
+- Testing the game on a physical iPhone
+- Testing different device layouts using Unity Device Simulator
+- Managing the project through GitHub
+
+The game was tested using **Unity Editor, a physical iPhone, and Unity Device Simulator**.
+
+The latest Pause Menu and responsive UI changes were also checked in Unity Editor and Device Simulator. Not every latest UI adjustment is claimed to have been retested on the physical iPhone.
+
+## 7. Documentation Assistance
+
+ChatGPT assisted with:
+
+- README.md
+- AI_LOG.txt
+- Game Design Document planning
+- GitHub workflow guidance
+- Presentation and demonstration preparation
+
+## 8. Examples of AI-Assisted Requests
+
+Examples of development questions included:
+
+1. Explain how the movement script works.
+2. Help implement a functional Pause Menu.
+3. Fix the disappearing Pause button.
+4. Reuse the PauseCanvas on all three levels.
+5. Improve HUD readability on mobile screens.
+6. Adapt the interface for iPhone Safe Area.
+7. Fix Unity compiler errors.
+8. Help prepare project documentation.
+
+## 9. AI Usage Disclosure
+
+ChatGPT provided substantial assistance with code, implementation guidance, debugging, and documentation.
+
+The student worked with the Unity project, integrated and reviewed changes, and performed gameplay and interface testing.
+
+This log is provided to transparently document the use of AI during the development of Ninja Sky Trial.
