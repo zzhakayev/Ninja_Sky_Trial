@@ -1,0 +1,9 @@
+# DECISIONS.md
+
+## Week 10 — Enemy AI
+
+1. I used ChatGPT to learn how to implement three different enemy types using finite state machines: Patroller, Shooter, and Charger.
+2. During development, enemies were positioned incorrectly because the level platforms were generated at runtime. I fixed their placement and NavMesh setup.
+3. I tested Level 1 with two players. Tester 1 completed it in 2 attempts, while Tester 2 needed 6 attempts.
+4. After testing, I reduced Shooter View Range from 8 to 5.5 and increased Shooter Cooldown from 1.5 to 2.2 seconds to make attacks fairer.
+5. I tested the updated game and found it easier to play. I reviewed the AI-assisted code and kept the changes that suited my game.
