@@ -8,22 +8,21 @@ public class ShooterAI : MonoBehaviour
 {
     public enum State { Idle, KeepDistance, Aim, Cooldown }
 
+    [Header("Enemy Data")]
+    [SerializeField] private EnemyStats stats;
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private LayerMask wallsMask;
 
     [Header("Detection")]
-    [SerializeField] private float viewRange = 8f;
     [SerializeField] private float forgetTime = 2f;
 
     [Header("Movement")]
     [SerializeField] private float preferredDistance = 5f;
     [SerializeField] private float distanceTolerance = 0.8f;
-    [SerializeField] private float moveSpeed = 2.2f;
 
     [Header("Shooting")]
-    [SerializeField] private float aimTime = 0.6f;
-    [SerializeField] private float cooldown = 1.5f;
     [SerializeField] private float projectileSpeed = 5f;
     [SerializeField] private float projectileLifetime = 4f;
     [SerializeField] private float hitRadius = 0.65f;
@@ -52,6 +51,13 @@ public class ShooterAI : MonoBehaviour
 
     private void Start()
     {
+        if (stats == null)
+        {
+            Debug.LogError("Shooter: Assign Shooter_Stats!");
+            enabled = false;
+            return;
+        }
+
         if (player == null || !agent.isOnNavMesh)
         {
             Debug.LogError(
@@ -61,7 +67,7 @@ public class ShooterAI : MonoBehaviour
             return;
         }
 
-        agent.speed = moveSpeed;
+        agent.speed = stats.moveSpeed;
         agent.stoppingDistance = 0.15f;
 
         SetState(State.Idle);
@@ -95,7 +101,7 @@ public class ShooterAI : MonoBehaviour
                 break;
 
             case State.Cooldown:
-                if (stateTimer >= cooldown)
+                if (stateTimer >= stats.attackCooldown)
                 {
                     SetState(seesPlayer
                         ? State.KeepDistance
@@ -193,7 +199,7 @@ public class ShooterAI : MonoBehaviour
 
         // Attack only while visible on the screen.
         if (stateTimer >= 0.35f &&
-            distance <= viewRange &&
+            distance <= stats.viewRange &&
             IsVisibleOnScreen())
         {
             SetState(State.Aim);
@@ -204,7 +210,7 @@ public class ShooterAI : MonoBehaviour
     {
         LookAtPlayer();
 
-        if (stateTimer >= aimTime)
+        if (stateTimer >= stats.windUpTime)
         {
             FireProjectile();
             SetState(State.Cooldown);
@@ -219,7 +225,7 @@ public class ShooterAI : MonoBehaviour
 
         float distance = direction.magnitude;
 
-        if (distance > viewRange || distance < 0.01f)
+        if (distance > stats.viewRange || distance < 0.01f)
             return false;
 
         return !Physics.Raycast(
@@ -348,7 +354,7 @@ public class ShooterAI : MonoBehaviour
                 Health health = player.GetComponent<Health>();
                 if (health != null)
                 {
-                    health.TakeDamage(1);
+                    health.TakeDamage(stats.damage);
                     }
                     break;
             }
@@ -375,8 +381,10 @@ public class ShooterAI : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (stats == null) return;
+
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, viewRange);
+        Gizmos.DrawWireSphere(transform.position, stats.viewRange);
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(

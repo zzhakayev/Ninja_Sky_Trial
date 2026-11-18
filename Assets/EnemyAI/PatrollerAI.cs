@@ -7,20 +7,17 @@ public class PatrollerAI : MonoBehaviour
 {
     public enum State { Patrol, Chase, Attack }
 
+    [Header("Enemy Data")]
+    [SerializeField] private EnemyStats stats;
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private Transform[] patrolPoints;
     [SerializeField] private LayerMask wallsMask;
 
     [Header("Vision")]
-    [SerializeField] private float viewRange = 7f;
     [SerializeField] private float viewAngle = 120f;
     [SerializeField] private float forgetTime = 2f;
-
-    [Header("Attack")]
-    [SerializeField] private float attackRange = 1.5f;
-    [SerializeField] private float windUp = 0.5f;
-    [SerializeField] private float recovery = 0.6f;
 
     [Header("Debug")]
     [SerializeField] private State currentState;
@@ -47,9 +44,17 @@ public class PatrollerAI : MonoBehaviour
 
     private void Start()
     {
-        if (player == null || patrolPoints.Length < 2)
+        if (stats == null)
         {
-            Debug.LogError("Patroller: Assign Player and two Patrol Points!");
+            Debug.LogError("Patroller: EnemyStats not assigned!");
+            enabled = false;
+            return;
+        }
+
+        if (player == null || patrolPoints == null ||
+            patrolPoints.Length < 2)
+        {
+            Debug.LogError("Patroller: Assign Player and Patrol Points!");
             enabled = false;
             return;
         }
@@ -60,6 +65,9 @@ public class PatrollerAI : MonoBehaviour
             enabled = false;
             return;
         }
+
+        // Movement speed comes from ScriptableObject.
+        agent.speed = stats.moveSpeed;
 
         SetState(State.Patrol);
     }
@@ -112,7 +120,7 @@ public class PatrollerAI : MonoBehaviour
             lostTimer = 0f;
             repathTimer = 0f;
             agent.isStopped = false;
-            agent.stoppingDistance = attackRange * 0.8f;
+            agent.stoppingDistance = stats.attackRange * 0.8f;
             SetColor(Color.cyan);
         }
         else
@@ -144,7 +152,7 @@ public class PatrollerAI : MonoBehaviour
             lostTimer = 0f;
             lastSeenPosition = player.position;
 
-            if (DistanceToPlayer() <= attackRange)
+            if (DistanceToPlayer() <= stats.attackRange)
             {
                 SetState(State.Attack);
                 return;
@@ -176,6 +184,7 @@ public class PatrollerAI : MonoBehaviour
         if (direction.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(direction);
+
             transform.rotation = Quaternion.RotateTowards(
                 transform.rotation,
                 targetRotation,
@@ -183,19 +192,20 @@ public class PatrollerAI : MonoBehaviour
             );
         }
 
-        // Warning before the strike
-        if (!attacked && stateTimer >= windUp)
+        // Warning time comes from EnemyStats.
+        if (!attacked && stateTimer >= stats.windUpTime)
         {
             attacked = true;
 
-            if (DistanceToPlayer() <= attackRange &&
+            if (DistanceToPlayer() <= stats.attackRange &&
                 CanSeePlayer())
             {
                 Debug.Log("Patroller attack HIT!");
+
                 Health health = player.GetComponent<Health>();
+
                 if (health != null)
-                {
-                    health.TakeDamage(1);}
+                    health.TakeDamage(stats.damage);
             }
             else
             {
@@ -203,8 +213,8 @@ public class PatrollerAI : MonoBehaviour
             }
         }
 
-        // Recovery before chasing again
-        if (stateTimer >= windUp + recovery)
+        // Cooldown comes from EnemyStats.
+        if (stateTimer >= stats.windUpTime + stats.attackCooldown)
             SetState(State.Chase);
     }
 
@@ -216,7 +226,7 @@ public class PatrollerAI : MonoBehaviour
 
         float distance = direction.magnitude;
 
-        if (distance > viewRange || distance < 0.01f)
+        if (distance > stats.viewRange || distance < 0.01f)
             return false;
 
         Vector3 flatDirection = direction;
@@ -257,10 +267,13 @@ public class PatrollerAI : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (stats == null)
+            return;
+
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, viewRange);
+        Gizmos.DrawWireSphere(transform.position, stats.viewRange);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(transform.position, stats.attackRange);
     }
 }

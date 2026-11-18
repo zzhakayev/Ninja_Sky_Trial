@@ -12,6 +12,7 @@ public class MidtermLevel : MonoBehaviour
     private int stage;
     private int coinCount;
     private int coinGoal;
+    private LevelData levelData;
     private bool bossDefeated;
     private float messageUntil;
     private string message = "";
@@ -36,6 +37,25 @@ public class MidtermLevel : MonoBehaviour
         stage = name == "Level1" ? 1 : name == "Level2" ? 2 : name == "Level3" ? 3 : 0;
         if (stage == 0) { enabled = false; return; }
 
+
+        levelData = Resources.Load<LevelData>(
+            "Levels/Level_" + stage.ToString("00")
+        );
+
+        if (levelData == null)
+        {
+            Debug.LogWarning(
+                "LevelData not found for Level " + stage
+            );
+        }
+        else
+        {
+            Debug.Log(
+                "Loaded LevelData: " + levelData.name
+            );
+        }
+
+
         DisableLegacyArena();
         Rigidbody rigidbody = GetComponent<Rigidbody>();
         if (rigidbody != null)
@@ -58,7 +78,31 @@ public class MidtermLevel : MonoBehaviour
         if (stage == 1) BuildLevelOne();
         if (stage == 2) BuildLevelTwo();
         if (stage == 3) BuildBossLevel();
-        transform.position = stage == 3 ? new Vector3(0f, 0.7f, -9f) : new Vector3(0f, 0.7f, -11f);
+
+        if (levelData != null)
+        {
+            if (stage <= 2 &&
+                levelData.goal == LevelGoal.CollectCoins &&
+                levelData.goalAmount > 0)
+            {
+                coinGoal = levelData.goalAmount;
+            }
+
+            Debug.Log(
+                "Level " + stage +
+                " configured from data. Goal amount: " +
+                levelData.goalAmount
+            );
+        }
+
+        Vector3 defaultSpawn = stage == 3
+            ? new Vector3(0f, 0.7f, -9f)
+            : new Vector3(0f, 0.7f, -11f);
+
+        transform.position = levelData != null
+            ? levelData.playerSpawnPoint
+            : defaultSpawn;
+
         Physics.SyncTransforms();
         ShowMessage(stage == 1 ? "Reach the portal. Collect 2 coins!" : stage == 2 ? "Moving platforms ahead. Collect 3 coins!" : "BOSS BATTLE! Use FIRE to defeat the Guardian.", 6f);
     }
@@ -410,9 +454,27 @@ public class MidtermLevel : MonoBehaviour
             ShowMessage("Collect " + (coinGoal - coinCount) + " more coins!", 2.3f);
             return;
         }
+
         AudioClip win = Resources.Load<AudioClip>("Audio/Finish");
-        if (playerAudio != null && win != null) playerAudio.PlayOneShot(win);
-        SceneManager.LoadScene(stage == 1 ? "Level2" : stage == 2 ? "Level3" : "Win");
+        if (playerAudio != null && win != null)
+            playerAudio.PlayOneShot(win);
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.CompleteLevel(
+                stage,
+                0,
+                coinCount
+            );
+        }
+        else
+        {
+            Debug.LogWarning("SaveManager was not found!");
+        }
+        SceneManager.LoadScene(
+            stage == 1 ? "Level2" :
+            stage == 2 ? "Level3" : "Win"
+        );
+
     }
 
     public void OnBossDefeated()
@@ -473,7 +535,7 @@ public class MidtermLevel : MonoBehaviour
             GUI.DrawTexture(new Rect(Screen.width * 0.325f, bossPanelY + 50f * scale, width * (boss.CurrentHP / (float)boss.maxHP), 10 * scale), Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
-        
+
         if (Time.time < messageUntil)
         {
             float width = Mathf.Min(Screen.width - 20f, 520f * scale);

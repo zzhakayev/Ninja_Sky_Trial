@@ -403,17 +403,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f89a0d24d0e40c449a19e62276766c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChargerAI
+  stats: {fileID: 11400000, guid: 228c52cea90da8c4ebf9aac4e5043951, type: 2}
   player: {fileID: 760494982}
   wallsMask:
     serializedVersion: 2
     m_Bits: 8
-  detectionRange: 6
-  windUpTime: 0.7
-  dashSpeed: 10
-  maxDashDistance: 5
-  hitRange: 1.1
-  stunTime: 1
-  cooldown: 1.5
   currentState: 0
 --- !u!1 &234149850
 GameObject:
@@ -2095,6 +2089,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 019bf4bc9b641ee4295d2ff644ca90ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PatrollerAI
+  stats: {fileID: 11400000, guid: c3cd5dae52043cb4caef4b1820aec5e2, type: 2}
   player: {fileID: 760494982}
   patrolPoints:
   - {fileID: 1872604531}
@@ -2102,12 +2097,8 @@ MonoBehaviour:
   wallsMask:
     serializedVersion: 2
     m_Bits: 8
-  viewRange: 7
   viewAngle: 120
   forgetTime: 2
-  attackRange: 1.5
-  windUp: 0.5
-  recovery: 0.6
   currentState: 0
 --- !u!114 &900050007
 MonoBehaviour:
@@ -3063,17 +3054,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ff6d2b53406cd5f4f95f9f63d96264e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShooterAI
+  stats: {fileID: 11400000, guid: 0e014a22b062d784f96a969677b11ff8, type: 2}
   player: {fileID: 760494982}
   wallsMask:
     serializedVersion: 2
     m_Bits: 8
-  viewRange: 5.5
   forgetTime: 2
   preferredDistance: 5
   distanceTolerance: 0.8
-  moveSpeed: 2.2
-  aimTime: 0.6
-  cooldown: 2.2
   projectileSpeed: 5
   projectileLifetime: 4
   hitRadius: 0.65

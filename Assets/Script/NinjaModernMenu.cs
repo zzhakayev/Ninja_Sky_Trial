@@ -17,6 +17,13 @@ public class NinjaModernMenu : MonoBehaviour
     private GameObject homePanel;
     private GameObject helpPanel;
     private GameObject settingsPanel;
+    private GameObject levelSelectPanel;
+    private GameObject resetConfirmOverlay;
+    private TextMeshProUGUI continueButtonText;
+    private TextMeshProUGUI vibrationButtonText;
+    private TextMeshProUGUI resetWarningText;
+    private readonly Button[] levelButtons = new Button[3];
+    private readonly TextMeshProUGUI[] levelButtonLabels = new TextMeshProUGUI[3];
     private TMP_FontAsset font;
     private AudioSource menuMusic;
     private TextMeshProUGUI musicButtonText;
@@ -41,6 +48,7 @@ public class NinjaModernMenu : MonoBehaviour
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 150;
+
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = portrait ? new Vector2(720, 1280) : new Vector2(1280, 720);
@@ -64,9 +72,12 @@ public class NinjaModernMenu : MonoBehaviour
         homePanel = Group(card, "Main menu");
         helpPanel = Group(card, "How to play");
         settingsPanel = Group(card, "Settings");
+        levelSelectPanel = Group(card, "Level select");
         BuildHome(homePanel.transform);
         BuildHelp(helpPanel.transform);
         BuildSettings(settingsPanel.transform);
+        BuildLevelSelect(levelSelectPanel.transform);
+        BuildResetConfirmation();
     }
 
     private void BuildHome(Transform parent)
@@ -77,15 +88,16 @@ public class NinjaModernMenu : MonoBehaviour
         Label(parent, "3 LEVELS   /   PLATFORMER   /   GUARDIAN", new Vector2(0, portrait ? 182 : 100), new Vector2(650, 40), portrait ? 19 : 18, SoftText, FontStyles.Normal, TextAlignmentOptions.Center);
         Image(parent, "Accent line", Highlight, new Vector2(0, portrait ? 135 : 72), new Vector2(150, 4));
 
-        float firstY = portrait ? 44 : 10;
-        float gap = portrait ? 113 : 76;
+        float firstY = portrait ? 56 : 8;
+        float gap = portrait ? 95 : 61;
         float width = portrait ? 500 : 430;
-        float height = portrait ? 86 : 62;
-        MenuButton(parent, "START GAME", new Vector2(0, firstY), new Vector2(width, height), Highlight, BackgroundColor, Play);
-        MenuButton(parent, "HOW TO PLAY", new Vector2(0, firstY - gap), new Vector2(width, height), ButtonColor, LightText, () => Show(helpPanel));
-        MenuButton(parent, "SETTINGS", new Vector2(0, firstY - 2 * gap), new Vector2(width, height), ButtonColor, LightText, () => Show(settingsPanel));
-        MenuButton(parent, "QUIT", new Vector2(0, firstY - 3 * gap), new Vector2(width, height), ButtonColor, LightText, Quit);
-        Label(parent, "COLLECT COINS. CROSS GAPS. DEFEAT THE GUARDIAN.", new Vector2(0, portrait ? -405 : -288), new Vector2(cardTextWidth(), 39), portrait ? 17 : 16, SoftText, FontStyles.Normal, TextAlignmentOptions.Center);
+        float height = portrait ? 76 : 50;
+        MenuButton(parent, "START GAME", new Vector2(0, firstY), new Vector2(width, height), Highlight, BackgroundColor, ContinueGame, out continueButtonText);
+        MenuButton(parent, "LEVEL SELECT", new Vector2(0, firstY - gap), new Vector2(width, height), ButtonColor, LightText, () => Show(levelSelectPanel));
+        MenuButton(parent, "HOW TO PLAY", new Vector2(0, firstY - 2 * gap), new Vector2(width, height), ButtonColor, LightText, () => Show(helpPanel));
+        MenuButton(parent, "SETTINGS", new Vector2(0, firstY - 3 * gap), new Vector2(width, height), ButtonColor, LightText, () => Show(settingsPanel));
+        MenuButton(parent, "QUIT", new Vector2(0, firstY - 4 * gap), new Vector2(width, height), ButtonColor, LightText, Quit);
+        Label(parent, "COLLECT COINS. CROSS GAPS. DEFEAT THE GUARDIAN.", new Vector2(0, portrait ? -424 : -289), new Vector2(cardTextWidth(), portrait ? 39 : 33), portrait ? 17 : 15, SoftText, FontStyles.Normal, TextAlignmentOptions.Center);
     }
 
     private void BuildHelp(Transform parent)
@@ -104,7 +116,7 @@ public class NinjaModernMenu : MonoBehaviour
 
     private void BuildSettings(Transform parent)
     {
-        PageTitle(parent, "SETTINGS", "YOUR PLAYER AND AUDIO");
+        PageTitle(parent, "SETTINGS", "PLAYER, AUDIO AND PROGRESS");
         float width = portrait ? 500 : 490;
         Label(parent, "PLAYER NAME", new Vector2(0, portrait ? 206 : 109), new Vector2(width, 36), 24, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
         CreateNameInput(parent, new Vector2(0, portrait ? 145 : 62), new Vector2(width, portrait ? 75 : 52));
@@ -112,9 +124,186 @@ public class NinjaModernMenu : MonoBehaviour
         volumeSlider = CreateSlider(parent, new Vector2(0, portrait ? -29 : -70), new Vector2(width - 80, 46));
         volumeText = Label(parent, "", new Vector2(0, portrait ? -75 : -107), new Vector2(width, 35), 20, Highlight, FontStyles.Bold, TextAlignmentOptions.Center);
         MenuButton(parent, "", new Vector2(0, portrait ? -175 : -164), new Vector2(width, portrait ? 77 : 53), ButtonColor, LightText, ToggleMusic, out musicButtonText);
+
+        if (portrait)
+        {
+            MenuButton(parent, "", new Vector2(0, -265), new Vector2(width, 62), ButtonColor, LightText, ToggleVibration, out vibrationButtonText);
+            MenuButton(parent, "RESET PROGRESS", new Vector2(0, -350), new Vector2(width, 62), new Color32(110, 38, 52, 255), LightText, AskReset);
+            MenuButton(parent, "BACK TO MENU", new Vector2(0, -442), new Vector2(480, 70), Highlight, BackgroundColor, () => Show(homePanel));
+        }
+        else
+        {
+            MenuButton(parent, "", new Vector2(-125, -211), new Vector2(230, 42), ButtonColor, LightText, ToggleVibration, out vibrationButtonText);
+            MenuButton(parent, "RESET PROGRESS", new Vector2(125, -211), new Vector2(230, 42), new Color32(110, 38, 52, 255), LightText, AskReset);
+            MenuButton(parent, "BACK TO MENU", new Vector2(0, -270), new Vector2(390, 45), Highlight, BackgroundColor, () => Show(homePanel));
+        }
+
         RefreshVolume();
         RefreshMusic();
-        MenuButton(parent, "BACK TO MENU", new Vector2(0, portrait ? -389 : -265), new Vector2(portrait ? 480 : 390, portrait ? 79 : 58), Highlight, BackgroundColor, () => Show(homePanel));
+        RefreshVibration();
+    }
+
+    // All three level buttons are created from the same UI helper.
+    // Their locked/unlocked state comes from SaveManager, not PlayerPrefs.
+    private void BuildLevelSelect(Transform parent)
+    {
+        PageTitle(parent, "LEVEL SELECT", "CHOOSE YOUR NEXT CHALLENGE");
+        float width = portrait ? 505 : 460;
+        float height = portrait ? 92 : 62;
+        float top = portrait ? 155 : 91;
+        float step = portrait ? 143 : 92;
+
+        for (int i = 0; i < 3; i++)
+        {
+            int levelNumber = i + 1; // Capture a distinct level for each button.
+            TextMeshProUGUI label;
+            MenuButton(parent, "LEVEL " + levelNumber,
+                new Vector2(0, top - step * i),
+                new Vector2(width, height), ButtonColor, LightText,
+                () => OpenLevel(levelNumber), out label);
+            levelButtonLabels[i] = label;
+            levelButtons[i] = label.GetComponentInParent<Button>();
+        }
+
+        Label(parent, "FINISH A LEVEL TO UNLOCK THE NEXT ONE",
+            new Vector2(0, portrait ? -287 : -210),
+            new Vector2(cardTextWidth(), 35),
+            portrait ? 18 : 16, SoftText, FontStyles.Normal, TextAlignmentOptions.Center);
+        MenuButton(parent, "BACK TO MENU",
+            new Vector2(0, portrait ? -390 : -265),
+            new Vector2(portrait ? 480 : 390, portrait ? 79 : 58),
+            Highlight, BackgroundColor, () => Show(homePanel));
+    }
+
+    private bool IsUnlocked(int levelNumber)
+    {
+        if (levelNumber == 1) return true;
+        return SaveManager.Instance != null &&
+               SaveManager.Instance.IsLevelUnlocked(levelNumber);
+    }
+
+    private int HighestUnlockedLevel()
+    {
+        for (int level = 3; level >= 1; level--)
+            if (IsUnlocked(level)) return level;
+        return 1;
+    }
+
+    private void RefreshLevelButtons()
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            bool unlocked = IsUnlocked(i + 1);
+            if (levelButtons[i] == null || levelButtonLabels[i] == null)
+                continue;
+
+            levelButtons[i].interactable = unlocked;
+            levelButtons[i].GetComponent<Image>().color = unlocked ? Highlight : ButtonColor;
+            levelButtonLabels[i].color = unlocked ? BackgroundColor : SoftText;
+            levelButtonLabels[i].text = unlocked
+                ? "LEVEL " + (i + 1) + "  -  UNLOCKED"
+                : "LEVEL " + (i + 1) + "  -  LOCKED";
+        }
+    }
+
+    private void RefreshContinueButton()
+    {
+        if (continueButtonText == null) return;
+        int level = HighestUnlockedLevel();
+        continueButtonText.text = level == 1 ? "START GAME" : "CONTINUE  -  LEVEL " + level;
+    }
+
+    private void ContinueGame()
+    {
+        OpenLevel(HighestUnlockedLevel());
+    }
+
+    private void OpenLevel(int levelNumber)
+    {
+        if (levelNumber < 1 || levelNumber > 3 || !IsUnlocked(levelNumber))
+        {
+            Debug.LogWarning("Level is locked: " + levelNumber);
+            return;
+        }
+        SceneManager.LoadScene("Level" + levelNumber);
+    }
+
+    private void BuildResetConfirmation()
+    {
+        RectTransform overlay = Image(root, "Reset progress confirmation",
+            new Color32(3, 7, 19, 220), Vector2.zero, Vector2.zero);
+        overlay.anchorMin = Vector2.zero;
+        overlay.anchorMax = Vector2.one;
+        overlay.offsetMin = Vector2.zero;
+        overlay.offsetMax = Vector2.zero;
+        overlay.GetComponent<Image>().raycastTarget = true; // Block taps behind the panel.
+        resetConfirmOverlay = overlay.gameObject;
+
+        float w = portrait ? 590 : 625;
+        float h = portrait ? 340 : 310;
+        RectTransform dialog = Image(overlay, "Confirmation dialog", CardColor,
+            Vector2.zero, new Vector2(w, h));
+        Image(dialog, "Confirmation accent", Orange,
+            new Vector2(0, h / 2f - 4), new Vector2(w, 6));
+        Label(dialog, "RESET PROGRESS?", new Vector2(0, portrait ? 99 : 92),
+            new Vector2(w - 40, 70), portrait ? 37 : 34,
+            Orange, FontStyles.Bold, TextAlignmentOptions.Center);
+        resetWarningText = Label(dialog,
+            "Your completed levels and coins will be deleted.",
+            new Vector2(0, portrait ? 12 : 9),
+            new Vector2(w - 56, 100), portrait ? 22 : 19,
+            LightText, FontStyles.Normal, TextAlignmentOptions.Center);
+        MenuButton(dialog, "CANCEL", new Vector2(-w * 0.245f, portrait ? -112 : -101),
+            new Vector2(w * 0.41f, portrait ? 65 : 58),
+            ButtonColor, LightText, () => resetConfirmOverlay.SetActive(false));
+        MenuButton(dialog, "DELETE", new Vector2(w * 0.245f, portrait ? -112 : -101),
+            new Vector2(w * 0.41f, portrait ? 65 : 58),
+            new Color32(166, 46, 59, 255), LightText, ConfirmReset);
+        resetConfirmOverlay.SetActive(false);
+    }
+
+    private void AskReset()
+    {
+        if (resetConfirmOverlay == null) return;
+        SaveData data = SaveManager.Instance != null ? SaveManager.Instance.Data : null;
+        if (resetWarningText != null)
+        {
+            resetWarningText.text = data == null
+                ? "Delete saved game progress? This cannot be undone."
+                : "Delete " + data.totalCoins + " saved coins and all unlocked levels?\nThis cannot be undone.";
+        }
+        resetConfirmOverlay.SetActive(true);
+    }
+
+    private void ConfirmReset()
+    {
+        SaveManager manager = SaveManager.Instance;
+        if (manager == null)
+        {
+            Debug.LogError("SaveManager is missing, progress cannot be reset.");
+            resetConfirmOverlay.SetActive(false);
+            return;
+        }
+        manager.ResetProgress();
+        SaveSystem.Save(manager.Data); // Persist default progress immediately.
+        resetConfirmOverlay.SetActive(false);
+        Show(levelSelectPanel);
+    }
+
+    private void ToggleVibration()
+    {
+        SaveManager manager = SaveManager.Instance;
+        if (manager == null || manager.Data == null) return;
+        manager.SetVibration(!manager.Data.vibrationEnabled);
+        RefreshVibration();
+    }
+
+    private void RefreshVibration()
+    {
+        if (vibrationButtonText == null) return;
+        SaveManager manager = SaveManager.Instance;
+        bool vibration = manager == null || manager.Data == null || manager.Data.vibrationEnabled;
+        vibrationButtonText.text = vibration ? "VIBRATION: ON" : "VIBRATION: OFF";
     }
 
     private float cardTextWidth()
@@ -180,11 +369,16 @@ public class NinjaModernMenu : MonoBehaviour
         slider.targetGraphic = handle.GetComponent<Image>();
         slider.minValue = 0f;
         slider.maxValue = 1f;
-        slider.value = PlayerPrefs.GetFloat("Volume", 1f);
+        slider.value = SaveManager.Instance != null && SaveManager.Instance.Data != null
+            ? SaveManager.Instance.Data.musicVolume
+            : PlayerPrefs.GetFloat("Volume", 0.8f);
+        PlayerPrefs.SetFloat("Volume", slider.value);
         slider.onValueChanged.AddListener(value =>
         {
             PlayerPrefs.SetFloat("Volume", value);
             PlayerPrefs.Save();
+            if (SaveManager.Instance != null)
+                SaveManager.Instance.SetMusicVolume(value);
             RefreshVolume();
             UpdateMusicAudio();
         });
@@ -224,7 +418,7 @@ public class NinjaModernMenu : MonoBehaviour
     private void UpdateMusicAudio()
     {
         if (menuMusic == null) return;
-        menuMusic.volume = 0.17f * PlayerPrefs.GetFloat("Volume", 1f);
+        menuMusic.volume = 0.17f * (volumeSlider != null ? volumeSlider.value : PlayerPrefs.GetFloat("Volume", 0.8f));
         menuMusic.mute = PlayerPrefs.GetInt("Music", 1) == 0;
     }
 
@@ -246,13 +440,13 @@ public class NinjaModernMenu : MonoBehaviour
     private void RefreshVolume()
     {
         if (volumeText != null)
-            volumeText.text = Mathf.RoundToInt(PlayerPrefs.GetFloat("Volume", 1f) * 100f) + "%";
+        {
+            float value = volumeSlider != null ? volumeSlider.value : PlayerPrefs.GetFloat("Volume", 0.8f);
+            volumeText.text = Mathf.RoundToInt(value * 100f) + "%";
+        }
     }
 
-    private void Play()
-    {
-        SceneManager.LoadScene("Level1");
-    }
+    // Start/Continue and Level Select both use OpenLevel above.
 
     private void Quit()
     {
@@ -264,6 +458,10 @@ public class NinjaModernMenu : MonoBehaviour
         if (homePanel != null) homePanel.SetActive(active == homePanel);
         if (helpPanel != null) helpPanel.SetActive(active == helpPanel);
         if (settingsPanel != null) settingsPanel.SetActive(active == settingsPanel);
+        if (levelSelectPanel != null) levelSelectPanel.SetActive(active == levelSelectPanel);
+        if (active == homePanel) RefreshContinueButton();
+        if (active == levelSelectPanel) RefreshLevelButtons();
+        if (active == settingsPanel) RefreshVibration();
     }
 
     private GameObject Group(Transform parent, string name)

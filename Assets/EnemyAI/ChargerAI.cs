@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -7,20 +6,12 @@ public class ChargerAI : MonoBehaviour
 {
     public enum State { Idle, WindUp, Dash, Stunned }
 
+    [Header("Enemy Data")]
+    [SerializeField] private EnemyStats stats;
+
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private LayerMask wallsMask;
-
-    [Header("Detection")]
-    [SerializeField] private float detectionRange = 6f;
-
-    [Header("Attack")]
-    [SerializeField] private float windUpTime = 0.7f;
-    [SerializeField] private float dashSpeed = 10f;
-    [SerializeField] private float maxDashDistance = 5f;
-    [SerializeField] private float hitRange = 1.1f;
-    [SerializeField] private float stunTime = 1f;
-    [SerializeField] private float cooldown = 1.5f;
 
     [Header("Debug")]
     [SerializeField] private State currentState;
@@ -40,17 +31,21 @@ public class ChargerAI : MonoBehaviour
         body = GetComponentInChildren<Renderer>();
         colorBlock = new MaterialPropertyBlock();
         gameCamera = Camera.main;
-
         agent.updateRotation = false;
     }
 
     private void Start()
     {
+        if (stats == null)
+        {
+            Debug.LogError("Charger: Assign Charger_Stats to the Stats field!");
+            enabled = false;
+            return;
+        }
+
         if (player == null || !agent.isOnNavMesh)
         {
-            Debug.LogError(
-                "Charger: assign Player and check NavMesh!"
-            );
+            Debug.LogError("Charger: assign Player and check NavMesh!");
             enabled = false;
             return;
         }
@@ -67,17 +62,14 @@ public class ChargerAI : MonoBehaviour
             case State.Idle:
                 UpdateIdle();
                 break;
-
             case State.WindUp:
                 UpdateWindUp();
                 break;
-
             case State.Dash:
                 UpdateDash();
                 break;
-
             case State.Stunned:
-                if (stateTimer >= stunTime)
+                if (stateTimer >= stats.stunDuration)
                     SetState(State.Idle);
                 break;
         }
@@ -87,7 +79,7 @@ public class ChargerAI : MonoBehaviour
     {
         SetColor(Color.green);
 
-        if (stateTimer >= cooldown &&
+        if (stateTimer >= stats.attackCooldown &&
             CanSeePlayer() &&
             IsVisibleOnScreen())
         {
@@ -99,14 +91,11 @@ public class ChargerAI : MonoBehaviour
     {
         LookAtPlayer();
 
-        // Flash red to warn the player.
-        bool flash = Mathf.FloorToInt(
-            stateTimer * 10f
-        ) % 2 == 0;
-
+        // Flash red to warn the player before the dash.
+        bool flash = Mathf.FloorToInt(stateTimer * 10f) % 2 == 0;
         SetColor(flash ? Color.red : Color.yellow);
 
-        if (stateTimer >= windUpTime)
+        if (stateTimer >= stats.windUpTime)
         {
             if (!IsVisibleOnScreen())
             {
@@ -114,8 +103,7 @@ public class ChargerAI : MonoBehaviour
                 return;
             }
 
-            dashDirection =
-                player.position - transform.position;
+            dashDirection = player.position - transform.position;
             dashDirection.y = 0f;
 
             if (dashDirection.sqrMagnitude < 0.01f)
@@ -126,7 +114,6 @@ public class ChargerAI : MonoBehaviour
 
             dashDirection.Normalize();
             dashTravelled = 0f;
-
             SetState(State.Dash);
         }
     }
@@ -135,9 +122,10 @@ public class ChargerAI : MonoBehaviour
     {
         SetColor(Color.red);
 
+        // Move Speed is the Charger's DASH speed.
         float step = Mathf.Min(
-            dashSpeed * Time.deltaTime,
-            maxDashDistance - dashTravelled
+            stats.moveSpeed * Time.deltaTime,
+            stats.dashDistance - dashTravelled
         );
 
         if (step <= 0f)
@@ -146,12 +134,10 @@ public class ChargerAI : MonoBehaviour
             return;
         }
 
-        Vector3 nextPosition =
-            transform.position + dashDirection * step;
+        Vector3 nextPosition = transform.position + dashDirection * step;
 
-        // Stop at a NavMesh boundary.
-        if (agent.Raycast(
-            nextPosition, out NavMeshHit navHit))
+        // Stop at a NavMesh boundary rather than dashing off a platform.
+        if (agent.Raycast(nextPosition, out NavMeshHit navHit))
         {
             SetState(State.Stunned);
             return;
@@ -173,28 +159,26 @@ public class ChargerAI : MonoBehaviour
             return;
         }
 
-        // Move directly, rather than pathfinding around walls.
+        // Preserve the direct dash movement used in the original AI.
         agent.Move(dashDirection * step);
         dashTravelled += step;
 
-        Vector3 difference =
-            player.position - transform.position;
+        Vector3 difference = player.position - transform.position;
         difference.y = 0f;
 
-        if (difference.magnitude <= hitRange)
+        if (difference.magnitude <= stats.attackRange)
         {
             Debug.Log("Charger attack HIT player!");
-           Health health = player.GetComponent<Health>();
-           if (health != null)
-           {
-            health.TakeDamage(1);
-            }
-            
+
+            Health health = player.GetComponent<Health>();
+            if (health != null)
+                health.TakeDamage(stats.damage);
+
             SetState(State.Stunned);
             return;
         }
 
-        if (dashTravelled >= maxDashDistance)
+        if (dashTravelled >= stats.dashDistance)
         {
             Debug.Log("Charger finished dash!");
             SetState(State.Stunned);
@@ -203,16 +187,18 @@ public class ChargerAI : MonoBehaviour
 
     private bool CanSeePlayer()
     {
-        Vector3 difference =
-            player.position - transform.position;
+        Vector3 difference = player.position - transform.position;
         difference.y = 0f;
 
-        if (difference.magnitude > detectionRange)
+        if (difference.magnitude > stats.viewRange)
             return false;
 
         Vector3 eye = transform.position + Vector3.up;
         Vector3 target = player.position + Vector3.up;
         Vector3 direction = target - eye;
+
+        if (direction.sqrMagnitude < 0.0001f)
+            return true;
 
         return !Physics.Raycast(
             eye,
@@ -239,16 +225,13 @@ public class ChargerAI : MonoBehaviour
 
     private void LookAtPlayer()
     {
-        Vector3 direction =
-            player.position - transform.position;
+        Vector3 direction = player.position - transform.position;
         direction.y = 0f;
 
         if (direction.sqrMagnitude < 0.01f)
             return;
 
-        Quaternion targetRotation =
-            Quaternion.LookRotation(direction);
-
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
         transform.rotation = Quaternion.RotateTowards(
             transform.rotation,
             targetRotation,
@@ -260,7 +243,6 @@ public class ChargerAI : MonoBehaviour
     {
         currentState = next;
         stateTimer = 0f;
-
         agent.ResetPath();
 
         if (next == State.Idle)
@@ -288,14 +270,13 @@ public class ChargerAI : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if (stats == null)
+            return;
+
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(
-            transform.position, detectionRange
-        );
+        Gizmos.DrawWireSphere(transform.position, stats.viewRange);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(
-            transform.position, hitRange
-        );
+        Gizmos.DrawWireSphere(transform.position, stats.attackRange);
     }
 }
