@@ -7,3 +7,11 @@
 3. I tested Level 1 with two players. Tester 1 completed it in 2 attempts, while Tester 2 needed 6 attempts.
 4. After testing, I reduced Shooter View Range from 8 to 5.5 and increased Shooter Cooldown from 1.5 to 2.2 seconds to make attacks fairer.
 5. I tested the updated game and found it easier to play. I reviewed the AI-assisted code and kept the changes that suited my game.
+
+## Week 11 — Data and Saves
+
+1. I used ChatGPT to help implement and debug the JSON save system, ScriptableObjects, and level progression in Ninja Sky Trial.
+2. During testing, the main menu buttons and player movement stopped working because Unity's old and new input systems were configured inconsistently.
+3. I fixed the EventSystem configuration to use Input System UI Input Module with the New Input System. I tested the updated game on my Android phone.
+4. I tested saving and loading progress by unlocking Level 2, closing the application, and reopening it. The unlocked level and audio settings were successfully restored.
+5. I tested the Reset Progress feature and demonstrated changing enemy movement speed through a ScriptableObject without modifying the code.

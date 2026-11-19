@@ -90,6 +90,7 @@ public class EnemyLevelSetup : MonoBehaviour
         );
     }
 
+
     private void MoveEnemy(string name, Vector3 position)
     {
         GameObject enemy = GameObject.Find(name);
@@ -100,8 +101,7 @@ public class EnemyLevelSetup : MonoBehaviour
             return;
         }
 
-        NavMeshAgent agent =
-            enemy.GetComponent<NavMeshAgent>();
+        NavMeshAgent agent = enemy.GetComponent<NavMeshAgent>();
 
         if (agent == null)
         {
@@ -109,28 +109,34 @@ public class EnemyLevelSetup : MonoBehaviour
             return;
         }
 
-        if (NavMesh.SamplePosition(
+        // Find a valid position on the new NavMesh.
+        if (!NavMesh.SamplePosition(
             position,
             out NavMeshHit hit,
-            1f,
+            1.5f,
             agent.areaMask))
         {
-            if (agent.Warp(hit.position))
-            {
-                Debug.Log(name + " placed on real platform.");
-            }
-            else
-            {
-                Debug.LogError(name + " failed to Warp!");
-            }
+            Debug.LogError(name + ": NavMesh position not found!");
+            return;
         }
-        else
+
+        // Place the enemy BEFORE activating NavMeshAgent.
+        agent.enabled = false;
+        enemy.transform.position = hit.position;
+
+        // NavMesh has already been created.
+        agent.enabled = true;
+
+        if (!agent.isOnNavMesh)
         {
-            Debug.LogError(
-                name + ": no NavMesh at " + position
-            );
+            Debug.LogError(name + ": could not join NavMesh!");
+            agent.enabled = false;
+            return;
         }
+
+        Debug.Log(name + " successfully placed on NavMesh!");
     }
+
 
     private void MovePoint(string name, Vector3 position)
     {

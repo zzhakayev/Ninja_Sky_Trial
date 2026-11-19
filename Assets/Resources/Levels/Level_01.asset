@@ -14,7 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelData
   levelNumber: 1
   goal: 0
-  goalAmount: 1
+  goalAmount: 2
   timeLimit: 0
   playerSpawnPoint: {x: 0, y: 0.7, z: -11}
-  waves: []
+  waves:
+  - enemyPrefab: {fileID: 0}
+    count: 1
+    delay: 0
+    spawnPoints:
+    - {x: 0, y: 1.4, z: 1}

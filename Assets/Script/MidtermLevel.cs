@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -99,12 +100,76 @@ public class MidtermLevel : MonoBehaviour
             ? new Vector3(0f, 0.7f, -9f)
             : new Vector3(0f, 0.7f, -11f);
 
-        transform.position = levelData != null
+        // A freshly created LevelData asset defaults to (0, 0, 0).
+        // Keep the old safe spawn until a real point is configured.
+        transform.position = levelData != null && levelData.playerSpawnPoint != Vector3.zero
             ? levelData.playerSpawnPoint
             : defaultSpawn;
 
         Physics.SyncTransforms();
-        ShowMessage(stage == 1 ? "Reach the portal. Collect 2 coins!" : stage == 2 ? "Moving platforms ahead. Collect 3 coins!" : "BOSS BATTLE! Use FIRE to defeat the Guardian.", 6f);
+        string intro = stage == 1
+            ? "Reach the portal. Collect " + coinGoal + " coins!"
+            : stage == 2
+                ? "Moving platforms ahead. Collect " + coinGoal + " coins!"
+                : "BOSS BATTLE! Use FIRE to defeat the Guardian.";
+        ShowMessage(intro, 6f);
+    }
+
+    // Wait until all Awake methods (including the runtime NavMesh setup) have run.
+    private void Start()
+    {
+        if (HasConfiguredWaves())
+            StartCoroutine(SpawnConfiguredWaves());
+    }
+
+    // A usable wave replaces the old procedural Patrol Drones, but the three
+    // manually placed enemy AI objects in Level1 remain untouched.
+    private bool HasConfiguredWaves()
+    {
+        if (levelData == null || levelData.waves == null)
+            return false;
+
+        foreach (EnemyWaveData wave in levelData.waves)
+        {
+            if (wave != null && wave.count > 0 &&
+                wave.spawnPoints != null && wave.spawnPoints.Length > 0)
+                return true;
+        }
+        return false;
+    }
+
+    private IEnumerator SpawnConfiguredWaves()
+    {
+        // Level1's floating-platform NavMesh is constructed during Awake.
+        yield return null;
+
+        foreach (EnemyWaveData wave in levelData.waves)
+        {
+            if (wave == null || wave.count <= 0 ||
+                wave.spawnPoints == null || wave.spawnPoints.Length == 0)
+                continue;
+
+            if (wave.delay > 0f)
+                yield return new WaitForSeconds(wave.delay);
+
+            for (int i = 0; i < wave.count; i++)
+            {
+                Vector3 spawn = wave.spawnPoints[i % wave.spawnPoints.Length];
+
+                if (wave.enemyPrefab != null)
+                {
+                    // Use a properly configured prefab if supplied in the data asset.
+                    Instantiate(wave.enemyPrefab, spawn, Quaternion.identity);
+                }
+                else
+                {
+                    // No prefab? Retain the original procedural Patrol Drone.
+                    Enemy(spawn, 1.4f);
+                }
+            }
+            Debug.Log("Spawned wave from " + levelData.name +
+                ": " + wave.count + " enemies");
+        }
     }
 
     void DisableLegacyArena()
@@ -328,7 +393,8 @@ public class MidtermLevel : MonoBehaviour
         Coin(new Vector3(0f, 1.4f, 13f));
         Hazard(new Vector3(1.8f, 0.43f, -3.9f));
         Hazard(new Vector3(-1.8f, 0.53f, 6f));
-        Enemy(new Vector3(0f, 1.4f, 1f), 1.4f);
+        if (!HasConfiguredWaves())
+            Enemy(new Vector3(0f, 1.4f, 1f), 1.4f);
         Medkit(new Vector3(1.1f, 1.28f, 7.9f));
         CreatePortal(13.4f, false, 0.65f);
     }
@@ -349,8 +415,11 @@ public class MidtermLevel : MonoBehaviour
         Hazard(new Vector3(-1.5f, 0.5f, -4f));
         Hazard(new Vector3(1.6f, 0.5f, -5f));
         Hazard(new Vector3(0f, 0.95f, 8f));
-        Enemy(new Vector3(0f, 1.2f, -4f), 1.35f);
-        Enemy(new Vector3(0f, 1.65f, 7f), 1.9f);
+        if (!HasConfiguredWaves())
+        {
+            Enemy(new Vector3(0f, 1.2f, -4f), 1.35f);
+            Enemy(new Vector3(0f, 1.65f, 7f), 1.9f);
+        }
         Medkit(new Vector3(1.5f, 1.55f, 6.5f));
         CreatePortal(13.4f, false, 0.45f);
     }

@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f39083f1899e1c74d8c19b1783ff15f5, type: 3}
   m_Name: Patroller_Stats
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
-  moveSpeed: 3
+  moveSpeed: 1
   maxHP: 3
   damage: 1
   viewRange: 7
   attackRange: 1.5
   attackCooldown: 0.6
   windUpTime: 0.5
+  dashDistance: 5
+  stunDuration: 1
