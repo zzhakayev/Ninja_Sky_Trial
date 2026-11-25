@@ -82,6 +82,21 @@ public class SaveManager : MonoBehaviour
     {
         Data.musicVolume = Mathf.Clamp01(volume);
         SaveSystem.Save(Data);
+        GameAudio.RefreshVolumes();
+    }
+
+    public void SetSfxVolume(float volume)
+    {
+        Data.sfxVolume = Mathf.Clamp01(volume);
+        SaveSystem.Save(Data);
+        GameAudio.RefreshVolumes();
+    }
+
+    public void SetMusicEnabled(bool enabled)
+    {
+        Data.musicEnabled = enabled;
+        SaveSystem.Save(Data);
+        GameAudio.RefreshVolumes();
     }
 
     public void SetVibration(bool enabled)
@@ -94,6 +109,7 @@ public class SaveManager : MonoBehaviour
     {
         SaveSystem.Delete();
         Data = new SaveData();
+        GameAudio.RefreshVolumes();
 
         Debug.Log("Progress reset!");
     }

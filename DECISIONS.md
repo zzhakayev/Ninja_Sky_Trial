@@ -16,3 +16,11 @@
 4. I tested saving and loading progress by unlocking Level 2, closing the application, and reopening it. The unlocked level and audio settings were successfully restored.
 5. I tested the Reset Progress feature and demonstrated changing enemy movement speed through a ScriptableObject without modifying the code.
 6. I tested corrupted JSON save data by intentionally modifying the save.json file. The game handled the invalid data without crashing and loaded default values. After testing, I restored the original save file.
+
+## Week 12 — Sound Pass
+
+1. I created GameMixer with Master, Music, SFX and Tracks groups, Normal and Paused snapshots, and exposed MusicVol and SFXVol.
+2. I asked ChatGPT to review the audio implementation. The old music sources were created again each time a scene loaded, so I chose a persistent GameAudio service with two music sources and a crossfade.
+3. I kept the Week 11 JSON system and added separate SFX volume with backward-compatible loading of version 1 saves.
+4. I chose distinct synthesized warning cues for each enemy, with small random pitch variation on repeated effects and separate menu/level tracks.
+5. Week 12 audio features were tested successfully in Unity and on an Android device. Music crossfade, sound effects, pause snapshots, and volume persistence work correctly.

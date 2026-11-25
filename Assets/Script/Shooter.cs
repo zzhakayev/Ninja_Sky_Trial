@@ -10,12 +10,6 @@ public class Shooter : MonoBehaviour
 
     private float nextShot;
     private Vector3 shootDirection = Vector3.forward;
-    private AudioSource audioSource;
-
-    void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-    }
 
     public void OnMove(InputValue value)
     {
@@ -57,10 +51,7 @@ public class Shooter : MonoBehaviour
             Quaternion.LookRotation(shootDirection)
         );
 
-        if (audioSource != null && shootClip != null)
-        {
-            audioSource.PlayOneShot(shootClip);
-        }
+        GameAudio.Play("Fire", 0.65f);
     }
 }
     

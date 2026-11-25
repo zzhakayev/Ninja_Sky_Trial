@@ -115,6 +115,7 @@ public class ShooterAI : MonoBehaviour
     {
         currentState = next;
         stateTimer = 0f;
+        if (next == State.Aim) GameAudio.EnemySound("ShooterWarn", transform.position);
 
         if (next == State.Idle)
         {
@@ -273,6 +274,7 @@ public class ShooterAI : MonoBehaviour
 
     private void FireProjectile()
     {
+        GameAudio.EnemySound("EnemyAttack", transform.position, 0.85f);
         Vector3 origin =
             transform.position + Vector3.up +
             transform.forward * 0.8f;

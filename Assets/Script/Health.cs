@@ -11,21 +11,20 @@ public class Health : MonoBehaviour
 
     public int CurrentHP { get; private set; }
     private bool invincible;
-    private AudioSource audioSource;
 
     void Start()
     {
         CurrentHP = maxHP;
-        audioSource = GetComponent<AudioSource>();
     }
 
     public void TakeDamage(int damage)
     {
         if (invincible || CurrentHP <= 0) return;
         CurrentHP = Mathf.Max(0, CurrentHP - damage);
-        if (audioSource != null && hurtClip != null) audioSource.PlayOneShot(hurtClip);
+        GameAudio.Play("Hit", 0.85f);
         if (CurrentHP <= 0)
         {
+            GameAudio.PlayFailure();
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             return;
         }
@@ -35,7 +34,7 @@ public class Health : MonoBehaviour
     public void Heal(int amount)
     {
         CurrentHP = Mathf.Min(maxHP, CurrentHP + amount);
-        if (audioSource != null && pickupClip != null) audioSource.PlayOneShot(pickupClip);
+        GameAudio.Play("Pickup", 0.8f);
     }
 
     IEnumerator Invincibility()

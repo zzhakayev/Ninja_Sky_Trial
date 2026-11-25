@@ -243,6 +243,8 @@ public class ChargerAI : MonoBehaviour
     {
         currentState = next;
         stateTimer = 0f;
+        if (next == State.WindUp) GameAudio.EnemySound("ChargeWarn", transform.position);
+        if (next == State.Dash) GameAudio.EnemySound("EnemyAttack", transform.position, 0.85f);
         agent.ResetPath();
 
         if (next == State.Idle)

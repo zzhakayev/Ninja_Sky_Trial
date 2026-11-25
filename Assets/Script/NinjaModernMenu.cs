@@ -25,10 +25,10 @@ public class NinjaModernMenu : MonoBehaviour
     private readonly Button[] levelButtons = new Button[3];
     private readonly TextMeshProUGUI[] levelButtonLabels = new TextMeshProUGUI[3];
     private TMP_FontAsset font;
-    private AudioSource menuMusic;
     private TextMeshProUGUI musicButtonText;
     private TextMeshProUGUI volumeText;
-    private Slider volumeSlider;
+    private Slider volumeSlider, sfxSlider;
+    private TextMeshProUGUI sfxText;
     private bool portrait;
 
     private void Awake()
@@ -37,7 +37,6 @@ public class NinjaModernMenu : MonoBehaviour
         font = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
         if (font == null) font = TMP_Settings.defaultFontAsset;
         BuildInterface();
-        ConfigureMusic();
         Show(homePanel);
     }
 
@@ -117,26 +116,20 @@ public class NinjaModernMenu : MonoBehaviour
     private void BuildSettings(Transform parent)
     {
         PageTitle(parent, "SETTINGS", "PLAYER, AUDIO AND PROGRESS");
-        float width = portrait ? 500 : 490;
-        Label(parent, "PLAYER NAME", new Vector2(0, portrait ? 206 : 109), new Vector2(width, 36), 24, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
-        CreateNameInput(parent, new Vector2(0, portrait ? 145 : 62), new Vector2(width, portrait ? 75 : 52));
-        Label(parent, "MUSIC VOLUME", new Vector2(0, portrait ? 30 : -20), new Vector2(width, 38), 23, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
-        volumeSlider = CreateSlider(parent, new Vector2(0, portrait ? -29 : -70), new Vector2(width - 80, 46));
-        volumeText = Label(parent, "", new Vector2(0, portrait ? -75 : -107), new Vector2(width, 35), 20, Highlight, FontStyles.Bold, TextAlignmentOptions.Center);
-        MenuButton(parent, "", new Vector2(0, portrait ? -175 : -164), new Vector2(width, portrait ? 77 : 53), ButtonColor, LightText, ToggleMusic, out musicButtonText);
-
-        if (portrait)
-        {
-            MenuButton(parent, "", new Vector2(0, -265), new Vector2(width, 62), ButtonColor, LightText, ToggleVibration, out vibrationButtonText);
-            MenuButton(parent, "RESET PROGRESS", new Vector2(0, -350), new Vector2(width, 62), new Color32(110, 38, 52, 255), LightText, AskReset);
-            MenuButton(parent, "BACK TO MENU", new Vector2(0, -442), new Vector2(480, 70), Highlight, BackgroundColor, () => Show(homePanel));
-        }
-        else
-        {
-            MenuButton(parent, "", new Vector2(-125, -211), new Vector2(230, 42), ButtonColor, LightText, ToggleVibration, out vibrationButtonText);
-            MenuButton(parent, "RESET PROGRESS", new Vector2(125, -211), new Vector2(230, 42), new Color32(110, 38, 52, 255), LightText, AskReset);
-            MenuButton(parent, "BACK TO MENU", new Vector2(0, -270), new Vector2(390, 45), Highlight, BackgroundColor, () => Show(homePanel));
-        }
+        float width = portrait ? 500 : 320;
+        float lx = portrait ? 0 : -180, rx = portrait ? 0 : 180;
+        Label(parent, "PLAYER NAME", new Vector2(lx, portrait ? 206 : 104), new Vector2(width, 36), 22, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
+        CreateNameInput(parent, new Vector2(lx, portrait ? 151 : 59), new Vector2(width, portrait ? 64 : 46));
+        Label(parent, "MUSIC VOLUME", new Vector2(lx, portrait ? 76 : 4), new Vector2(width, 32), 22, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
+        volumeSlider = CreateSlider(parent, new Vector2(lx, portrait ? 35 : -32), new Vector2(width - 55, 38), false);
+        volumeText = Label(parent, "", new Vector2(lx, portrait ? 0 : -64), new Vector2(width, 28), 18, Highlight, FontStyles.Bold, TextAlignmentOptions.Center);
+        Label(parent, "SFX VOLUME", new Vector2(lx, portrait ? -48 : -101), new Vector2(width, 32), 22, SoftText, FontStyles.Bold, TextAlignmentOptions.Center);
+        sfxSlider = CreateSlider(parent, new Vector2(lx, portrait ? -89 : -138), new Vector2(width - 55, 38), true);
+        sfxText = Label(parent, "", new Vector2(lx, portrait ? -123 : -170), new Vector2(width, 28), 18, Highlight, FontStyles.Bold, TextAlignmentOptions.Center);
+        MenuButton(parent, "", new Vector2(rx, portrait ? -180 : 65), new Vector2(width, portrait ? 62 : 52), ButtonColor, LightText, ToggleMusic, out musicButtonText);
+        MenuButton(parent, "", new Vector2(rx, portrait ? -253 : -7), new Vector2(width, portrait ? 62 : 52), ButtonColor, LightText, ToggleVibration, out vibrationButtonText);
+        MenuButton(parent, "RESET PROGRESS", new Vector2(rx, portrait ? -326 : -79), new Vector2(width, portrait ? 62 : 52), new Color32(110, 38, 52, 255), LightText, AskReset);
+        MenuButton(parent, "BACK TO MENU", new Vector2(0, portrait ? -416 : -252), new Vector2(portrait ? 480 : 390, portrait ? 70 : 48), Highlight, BackgroundColor, () => Show(homePanel));
 
         RefreshVolume();
         RefreshMusic();
@@ -286,6 +279,11 @@ public class NinjaModernMenu : MonoBehaviour
         }
         manager.ResetProgress();
         SaveSystem.Save(manager.Data); // Persist default progress immediately.
+        volumeSlider.SetValueWithoutNotify(manager.Data.musicVolume);
+        sfxSlider.SetValueWithoutNotify(manager.Data.sfxVolume);
+        RefreshVolume();
+        RefreshMusic();
+        RefreshVibration();
         resetConfirmOverlay.SetActive(false);
         Show(levelSelectPanel);
     }
@@ -350,9 +348,9 @@ public class NinjaModernMenu : MonoBehaviour
         });
     }
 
-    private Slider CreateSlider(Transform parent, Vector2 position, Vector2 size)
+    private Slider CreateSlider(Transform parent, Vector2 position, Vector2 size, bool isSfx)
     {
-        GameObject sliderObject = new GameObject("Music volume slider", typeof(RectTransform), typeof(Slider));
+        GameObject sliderObject = new GameObject(isSfx ? "SFX volume slider" : "Music volume slider", typeof(RectTransform), typeof(Slider));
         sliderObject.transform.SetParent(parent, false);
         RectTransform sliderRT = sliderObject.GetComponent<RectTransform>();
         Place(sliderRT, position, size);
@@ -369,18 +367,17 @@ public class NinjaModernMenu : MonoBehaviour
         slider.targetGraphic = handle.GetComponent<Image>();
         slider.minValue = 0f;
         slider.maxValue = 1f;
-        slider.value = SaveManager.Instance != null && SaveManager.Instance.Data != null
-            ? SaveManager.Instance.Data.musicVolume
-            : PlayerPrefs.GetFloat("Volume", 0.8f);
-        PlayerPrefs.SetFloat("Volume", slider.value);
+        var data = SaveManager.Instance != null ? SaveManager.Instance.Data : null;
+        slider.SetValueWithoutNotify(data == null ? 0.8f : (isSfx ? data.sfxVolume : data.musicVolume));
         slider.onValueChanged.AddListener(value =>
         {
-            PlayerPrefs.SetFloat("Volume", value);
-            PlayerPrefs.Save();
-            if (SaveManager.Instance != null)
-                SaveManager.Instance.SetMusicVolume(value);
+            var manager = SaveManager.Instance;
+            if (manager != null)
+            {
+                if (isSfx) manager.SetSfxVolume(value);
+                else manager.SetMusicVolume(value);
+            }
             RefreshVolume();
-            UpdateMusicAudio();
         });
         track.GetComponent<Image>().raycastTarget = true;
         handle.GetComponent<Image>().raycastTarget = true;
@@ -388,62 +385,25 @@ public class NinjaModernMenu : MonoBehaviour
         return slider;
     }
 
-    private void ConfigureMusic()
-    {
-        AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsSortMode.None);
-        foreach (AudioSource source in sources)
-        {
-            if (source != null && source.isPlaying && source.loop)
-            {
-                menuMusic = source;
-                break;
-            }
-        }
-        if (menuMusic == null)
-        {
-            AudioClip clip = Resources.Load<AudioClip>("Audio/LevelMusic");
-            if (clip != null)
-            {
-                menuMusic = gameObject.AddComponent<AudioSource>();
-                menuMusic.playOnAwake = false;
-                menuMusic.loop = true;
-                menuMusic.clip = clip;
-                menuMusic.spatialBlend = 0f;
-                menuMusic.Play();
-            }
-        }
-        UpdateMusicAudio();
-    }
-
-    private void UpdateMusicAudio()
-    {
-        if (menuMusic == null) return;
-        menuMusic.volume = 0.17f * (volumeSlider != null ? volumeSlider.value : PlayerPrefs.GetFloat("Volume", 0.8f));
-        menuMusic.mute = PlayerPrefs.GetInt("Music", 1) == 0;
-    }
-
     private void ToggleMusic()
     {
-        int enabled = PlayerPrefs.GetInt("Music", 1) == 0 ? 1 : 0;
-        PlayerPrefs.SetInt("Music", enabled);
-        PlayerPrefs.Save();
+        var manager = SaveManager.Instance;
+        if (manager != null) manager.SetMusicEnabled(!manager.Data.musicEnabled);
         RefreshMusic();
-        UpdateMusicAudio();
     }
 
     private void RefreshMusic()
     {
-        if (musicButtonText != null)
-            musicButtonText.text = PlayerPrefs.GetInt("Music", 1) == 0 ? "MUSIC: OFF  (TAP TO ENABLE)" : "MUSIC: ON  (TAP TO MUTE)";
+        bool enabled = SaveManager.Instance == null || SaveManager.Instance.Data.musicEnabled;
+        if (musicButtonText != null) musicButtonText.text = enabled ? "MUSIC: ON" : "MUSIC: OFF";
     }
 
     private void RefreshVolume()
     {
-        if (volumeText != null)
-        {
-            float value = volumeSlider != null ? volumeSlider.value : PlayerPrefs.GetFloat("Volume", 0.8f);
-            volumeText.text = Mathf.RoundToInt(value * 100f) + "%";
-        }
+        if (volumeText != null && volumeSlider != null)
+            volumeText.text = Mathf.RoundToInt(volumeSlider.value * 100f) + "%";
+        if (sfxText != null && sfxSlider != null)
+            sfxText.text = Mathf.RoundToInt(sfxSlider.value * 100f) + "%";
     }
 
     // Start/Continue and Level Select both use OpenLevel above.
@@ -520,7 +480,7 @@ public class NinjaModernMenu : MonoBehaviour
         block.pressedColor = new Color32(177, 209, 225, 255);
         block.selectedColor = Color.white;
         button.colors = block;
-        button.onClick.AddListener(() => onClick());
+        button.onClick.AddListener(() => { GameAudio.Play("Click", 0.65f); onClick(); });
         textObject = Label(holder, text, Vector2.zero, size - new Vector2(12, 4), portrait ? 26 : 24, fg, FontStyles.Bold, TextAlignmentOptions.Center);
     }
 

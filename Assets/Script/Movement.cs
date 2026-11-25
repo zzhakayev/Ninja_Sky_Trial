@@ -14,8 +14,6 @@ public class Movement : MonoBehaviour
     private Animator ninjaAnimator;
     private Transform ninjaVisual;
     private MidtermLevel level;
-    private AudioSource audioSource;
-    private AudioClip jumpClip;
     private int coins;
     private int coinsTotal;
 
@@ -23,8 +21,6 @@ public class Movement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         playerCollider = GetComponent<Collider>();
-        audioSource = GetComponent<AudioSource>();
-        jumpClip = Resources.Load<AudioClip>("Audio/Jump");
         level = GetComponent<MidtermLevel>();
     }
 
@@ -50,6 +46,7 @@ public class Movement : MonoBehaviour
     {
         if (transform.position.y < -12f)
         {
+            GameAudio.PlayFailure();
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             return;
         }
@@ -78,7 +75,7 @@ public class Movement : MonoBehaviour
     {
         if (!value.isPressed || !IsGrounded()) return;
         rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        if (audioSource != null && jumpClip != null) audioSource.PlayOneShot(jumpClip, 0.65f);
+        GameAudio.Play("Jump", 0.75f);
     }
 
     void FixedUpdate()
@@ -114,8 +111,7 @@ public class Movement : MonoBehaviour
             Destroy(other.gameObject);
             coins++;
             if (level != null) level.CollectCoin();
-            AudioClip clip = GetComponent<Health>() != null ? GetComponent<Health>().pickupClip : null;
-            if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
+            GameAudio.Play("Pickup", 0.8f);
         }
 
         if (other.CompareTag("Exit"))

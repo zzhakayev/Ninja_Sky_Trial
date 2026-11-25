@@ -20,8 +20,6 @@ public class MidtermLevel : MonoBehaviour
     private BossEnemy boss;
     private GameObject portal;
     private Health health;
-    private AudioSource music;
-    private AudioSource playerAudio;
     private GUIStyle titleStyle;
     private GUIStyle smallStyle;
     private GUIStyle centeredStyle;
@@ -70,10 +68,8 @@ public class MidtermLevel : MonoBehaviour
         if (movement != null) { movement.force = 15f; movement.jumpForce = 7.2f; }
         health = GetComponent<Health>();
         if (health != null) health.maxHP = 3;
-        playerAudio = GetComponent<AudioSource>();
         AddNinja();
         PrepareCamera();
-        SetupMusic();
         CreateEnvironment();
         CreateCanvasHUD();
         if (stage == 1) BuildLevelOne();
@@ -237,17 +233,6 @@ public class MidtermLevel : MonoBehaviour
             }
             part.materials = replacements;
         }
-    }
-
-    void SetupMusic()
-    {
-        music = gameObject.AddComponent<AudioSource>();
-        music.playOnAwake = false;
-        music.loop = true;
-        music.spatialBlend = 0;
-        music.volume = 0.17f * PlayerPrefs.GetFloat("Volume", 1f);
-        music.clip = Resources.Load<AudioClip>(stage == 3 ? "Audio/BossMusic" : "Audio/LevelMusic");
-        if (music.clip != null && PlayerPrefs.GetInt("Music", 1) != 0) music.Play();
     }
 
     Material NewMaterial(Color color)
@@ -440,7 +425,6 @@ public class MidtermLevel : MonoBehaviour
         boss.maxHP = 8;
         boss.target = transform;
         boss.level = this;
-        guardian.AddComponent<AudioSource>().spatialBlend = 0f;
         Primitive("Guardian Crown", PrimitiveType.Sphere, new Vector3(0, 3.25f, 8),
             new Vector3(0.9f, 0.3f, 0.9f), orange, false).transform.SetParent(guardian.transform, true);
         Primitive("Guardian Eyes", PrimitiveType.Cube, new Vector3(0f, 2.0f, 6.82f),
@@ -524,9 +508,7 @@ public class MidtermLevel : MonoBehaviour
             return;
         }
 
-        AudioClip win = Resources.Load<AudioClip>("Audio/Finish");
-        if (playerAudio != null && win != null)
-            playerAudio.PlayOneShot(win);
+        GameAudio.Play("Win");
         if (SaveManager.Instance != null)
         {
             SaveManager.Instance.CompleteLevel(

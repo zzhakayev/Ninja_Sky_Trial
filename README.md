@@ -383,8 +383,45 @@ The Unity `.gitignore` is used to exclude generated and temporary project files.
 
 **Project:** Ninja Sky Trial
 
-**Assignment:** UI Development and Game Design Documentation (Assignment 8–9 / RK2)
+**Assignment:** Assignment 12 — Sound Pass / RK2
 
-The submission materials include the Unity project, GitHub repository, game design document (GDD), interface screenshots, AI usage log, and a narrated demonstration video.
+The submission materials include the GitHub repository,
+Android APK, AudioMixer screenshot, DECISIONS.md,
+sound sources and licenses, and a narrated
+2–3 minute demonstration video in English.
 
 This project is an educational game prototype developed for academic assessment.
+
+## Assignment 12 — Sound Pass
+
+### Audio architecture
+`GameAudio` persists across scenes, owns two music sources and a pool of SFX sources, routes them to `GameMixer`, and uses unscaled time for crossfades and pause snapshots. `NinjaModernMenu` changes Music and SFX independently; `SaveManager` and `SaveSystem` save both values in `save.json` (version 2, with migration of version 1 saves). `Movement`, `Health`, `Shooter`, `MidtermLevel`, enemy AI and `PauseMenu` trigger events through `GameAudio`.
+
+### Sound sources and licenses
+All active clips below are original procedural sounds/compositions synthesized for this project with AI-assisted Python code (sine/triangle harmonics and generated noise; no samples or external music). These newly generated clips are provided for use and modification under CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/.
+
+| File (Assets/Resources/Audio/Week12/) | Event | Source / license |
+|---|---|---|
+| Jump.wav | Jump | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Hit.wav | Player damage | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Pickup.wav | Coin / healing | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Fire.wav | Player fire | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Click.wav | UI click | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Death.wav | Death | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Lose.wav | Level failure | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| Win.wav | Level completion | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| PatrolWarn.wav | Patroller wind-up | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| ShooterWarn.wav | Shooter aim | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| ChargeWarn.wav | Charger wind-up | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| BossWarn.wav | Guardian wind-up | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| EnemyAttack.wav | Enemy attack | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| BossHit.wav | Boss damage | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| MenuLoop.wav | Menu music | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+| LevelLoop.wav | Level music | Original synthesis for Ninja Sky Trial, CC0 1.0 |
+
+Legacy audio files (Assets/Audio/Hurt.wav, Pickup.wav, Shoot.wav; Assets/Resources/Audio/Jump.wav, BossHit.wav, Finish.wav, LevelMusic.wav, BossMusic.wav) remain in the repository for historical compatibility. The old README identifies LevelMusic and BossMusic as synthesized for the project; the exact provenance/license for the remaining legacy clips is not documented in the provided archive. The Week 12 gameplay events now use the new documented clips instead. Verify any remaining legacy usage and remove unused legacy files only after checking references.
+
+Week 12 audio features were tested successfully
+in Unity and on an Android device.
+Music crossfade, sound effects, pause snapshots,
+and volume persistence work correctly.

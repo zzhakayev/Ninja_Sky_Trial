@@ -8,8 +8,6 @@ public class BossEnemy : MonoBehaviour
     public Transform target;
     public MidtermLevel level;
     private Renderer bossRenderer;
-    private AudioSource audioSource;
-    private AudioClip hitClip;
     private Color originalColor;
     private bool defeated;
 
@@ -18,8 +16,6 @@ public class BossEnemy : MonoBehaviour
         CurrentHP = maxHP;
         bossRenderer = GetComponent<Renderer>();
         if (bossRenderer != null) originalColor = bossRenderer.material.color;
-        audioSource = GetComponent<AudioSource>();
-        hitClip = Resources.Load<AudioClip>("Audio/BossHit");
         StartCoroutine(AttackRoutine());
     }
 
@@ -40,10 +36,11 @@ public class BossEnemy : MonoBehaviour
     {
         if (defeated || CurrentHP <= 0) return;
         CurrentHP--;
-        if (audioSource != null && hitClip != null) audioSource.PlayOneShot(hitClip, 0.8f);
+        GameAudio.EnemySound("BossHit", transform.position, 0.85f);
         if (CurrentHP <= 0)
         {
             defeated = true;
+            GameAudio.Play("Death", 0.8f);
             if (level != null) level.OnBossDefeated();
             Destroy(gameObject);
             return;
@@ -64,6 +61,7 @@ public class BossEnemy : MonoBehaviour
         while (!defeated && target != null)
         {
             bool secondPhase = CurrentHP <= maxHP / 2;
+            GameAudio.EnemySound("BossWarn", transform.position);
             Vector3 mark = target.position;
             GameObject warning = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             warning.name = "Guardian Warning Marker";
@@ -86,6 +84,7 @@ public class BossEnemy : MonoBehaviour
             if (warning != null) Destroy(warning);
             if (target == null || defeated) yield break;
             Vector3 direction = (target.position + Vector3.up * 0.2f - transform.position).normalized;
+            GameAudio.EnemySound("EnemyAttack", transform.position, 0.85f);
             int count = secondPhase ? 3 : 1;
             for (int i = 0; i < count; i++)
             {

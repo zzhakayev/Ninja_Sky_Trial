@@ -106,6 +106,7 @@ public class PatrollerAI : MonoBehaviour
     {
         currentState = next;
         stateTimer = 0f;
+        if (next == State.Attack) GameAudio.EnemySound("PatrolWarn", transform.position);
         attacked = false;
 
         if (next == State.Patrol)
@@ -196,6 +197,7 @@ public class PatrollerAI : MonoBehaviour
         if (!attacked && stateTimer >= stats.windUpTime)
         {
             attacked = true;
+            GameAudio.EnemySound("EnemyAttack", transform.position, 0.75f);
 
             if (DistanceToPlayer() <= stats.attackRange &&
                 CanSeePlayer())

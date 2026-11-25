@@ -26,6 +26,9 @@ public class VictoryScreen : MonoBehaviour
         GUI.Label(new Rect(x, y + 24, w, 82), "VICTORY!", title);
         GUI.Label(new Rect(x + 12, y + 108, w - 24, 60), "ALL 3 LEVELS COMPLETED\nTHE GUARDIAN IS DEFEATED", subtitle);
         if (GUI.Button(new Rect(x + w * 0.15f, y + 192, w * 0.7f, 52f), "BACK TO MAIN MENU"))
+        {
+            GameAudio.Play("Click", 0.65f);
             SceneManager.LoadScene("Main menu");
+        }
     }
 }

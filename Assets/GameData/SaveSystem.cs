@@ -7,7 +7,7 @@ using UnityEngine;
 [Serializable]
 public class SaveData
 {
-    public int version = 1;
+    public int version = 2;
 
     public int bestScore = 0;
     public int totalCoins = 0;
@@ -17,6 +17,8 @@ public class SaveData
         new List<int> { 1 };
 
     public float musicVolume = 0.8f;
+    public float sfxVolume = 0.8f;
+    public bool musicEnabled = true;
     public bool vibrationEnabled = true;
 }
 
@@ -46,15 +48,24 @@ public static class SaveSystem
             SaveData data =
                 JsonUtility.FromJson<SaveData>(json);
 
+            if (data != null && data.version == 1)
+            {
+                data.version = 2;
+                data.sfxVolume = 0.8f;
+                data.musicEnabled = PlayerPrefs.GetInt("Music", 1) != 0;
+            }
+
             if (data == null ||
-                data.version != 1 ||
+                data.version != 2 ||
                 data.unlockedLevels == null ||
                 !data.unlockedLevels.Contains(1) ||
                 data.bestScore < 0 ||
                 data.totalCoins < 0 ||
                 data.lastCompletedLevel < 0 ||
                 data.musicVolume < 0f ||
-                data.musicVolume > 1f)
+                data.musicVolume > 1f ||
+                data.sfxVolume < 0f ||
+                data.sfxVolume > 1f)
             {
                 throw new Exception("Invalid save data.");
             }
